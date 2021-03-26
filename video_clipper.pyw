@@ -130,7 +130,13 @@ with window('MAIN'):
 					)
 
 	add_separator()
+	add_same_line(xoffset=60)
 
+	def zero_times():
+		set_value('##arrows_end',1)
+		assert_times(None,'##arrows_end')
+
+	add_button('clear', callback=zero_times)
 	add_same_line(xoffset=430)
 	add_listbox('format',items=['.mp4','.webm','.gif'],width=80)
 	add_separator()
