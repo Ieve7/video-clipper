@@ -82,8 +82,8 @@ with window('MAIN'):
 				s -= int(s/60) * 60
 
 			if m/60 > 1:
-				h += int(s/60)
-				m -= int(s/60) * 60
+				h += int(m/60)
+				m -= int(m/60) * 60
 
 			return [h,m,s] #simplifies to h:m:s
 
