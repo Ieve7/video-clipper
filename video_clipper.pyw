@@ -2,10 +2,10 @@ from dearpygui.core import *
 from dearpygui.simple import *
 import subprocess
 import os
+from datetime import datetime
 SCRIPT_DIR = os.path.dirname(__file__)
 SAVED_THEME = os.path.join(SCRIPT_DIR, 'theme.txt')
 # ==============================================================================
-
 '''Tkinter implementation of explorer'''
 from tkinter import Tk
 from tkinter import filedialog
@@ -26,7 +26,6 @@ def explorer_tkinter():
 	set_value('opened_path', dir)
 	set_value('opened_file', fn)
 
-
 '''Function option for explorer with pure dearpygui (buggy explorer)'''
 def explorer(*args):
 	def cb(s,d):
@@ -34,7 +33,6 @@ def explorer(*args):
 		set_value('opened_path', d[0])
 
 	open_file_dialog(cb,extensions='.*, .mp4, .webm, .mkv, .gif, .flv, .vob, .ogg, .ogv, .gifv, .mng, .avi, .MTS, .M2TS, .TS, .mov, .qt, .wmv, .yuv, .rm, .mpg, .mpeg, .m2v, .m4v, .svi, .3gp, .3g2, .m4p, .mxf, .roq, .nsv, .flv, .f4v')
-
 
 with window('MAIN'):
 	def recall_theme():
@@ -163,13 +161,17 @@ with window('MAIN'):
 			print('no path selected')
 		else:
 			file = get_value('opened_file')
+			print()
+			print(path)
+			print(file)
+			print()
 			ext = (lambda a: '.'+a[len(a)-1] )(file.split('.'))
-			ext = '.gif'
 			in_file = os.path.join(path,file)
-			if get_value('#reference'):
-				output_file = os.path.join(path, file[:len(file)-len(ext)]+f'__{in_n}__'+ext)
-			elif get_value('overwrite'):
+
+			if get_value('overwrite'):
 				output_file = in_file
+			elif get_value('#reference'):
+				output_file = os.path.join(path, file[:len(file)-len(ext)]+f'__{in_n}__'+ext)
 			else:
 				output_file = os.path.join(path, f'{in_n}'+ext)
 
@@ -180,13 +182,42 @@ with window('MAIN'):
 
 			if get_value('open explorer'):
 				command = 'explorer /select, "' + str(os.path.join(path,output_file)).replace('/','\\')+'"'
-				subprocess.Popen(command)
 
 		delete_item('this')
-	add_same_line(xoffset=450)
+
+	add_same_line(xoffset=440)
 	add_button('split',callback=split)
+	add_same_line(xoffset=150)
 	add_checkbox('open explorer',tip='show the finished file in explorer',default_value=True)
+	add_same_line(xoffset=300)
 	add_checkbox('overwrite',tip='replace the original file',default_value=False)
+
+	def youtube_dl(s,url):
+		w,h = get_main_window_size()
+		with window('youtube-dl',no_resize=True,no_move=True,no_close=True,no_title_bar=True, x_pos=0,y_pos=0, height=h,width=w):
+			add_text('status-ytdl',default_value=url)
+			print(url)
+			if url:
+				set_value('url','')
+				set_value('status-ytdl',f'[DLing]{url}')
+
+				name = datetime.now().strftime('%Y-%m-%d__%H-%M-%S.mp4')
+				filename = os.path.expanduser("~\desktop") + '\\'+ name
+				ytdl = f'youtube-dl -f best --output {filename} {url}'
+				os.system(ytdl)
+
+
+				set_value('opened_file',name)
+				set_value('opened_path',os.path.expanduser("~\desktop"))
+		delete_item('youtube-dl')
+
+	add_separator()
+	add_dummy(height=300)
+	add_separator()
+	add_text('Youtube Downloader')
+	add_button('##youtube-dl',label='load',callback=youtube_dl,callback_data=lambda *args: get_value('url'))
+	add_same_line()
+	add_input_text('url',width=440)
 
 # ==============================================================================
 add_additional_font('anonBlack.ttf', size=14)
