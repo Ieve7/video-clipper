@@ -42,7 +42,6 @@ with window('MAIN'):
 	def rotate_theme(sender,caller):
 		themes = '''Light, Classic, Grey, Dark Grey, Dark, Dark 2, Cherry, Purple, Gold, Red'''.split(', ')
 		index = get_value('##theme')
-		print(index)
 		min = 0
 		max = len(themes)-1
 		if index > max:
@@ -55,19 +54,20 @@ with window('MAIN'):
 		with open(SAVED_THEME,'w') as f: f.write(themes[index])
 		recall_theme()
 
-	add_same_line(xoffset=440)
-	add_input_int('##theme',width=10,min_value=-1,default_value=0,callback=rotate_theme,tip='skin')
 
 	with group('file_picker',horizontal=True):
 
 		add_button('locate video',callback=explorer_tkinter)
 		add_label_text('opened_file',label='')
 		add_label_text('opened_path',label='',show=False)
+	add_same_line(xoffset=440)
+	add_input_int('##theme',width=10,min_value=-1,default_value=0,callback=rotate_theme,tip='skin')
 
 	add_separator()
-	add_checkbox('#reference',label='name',default_value=True,tip='reference original name in the clip\'s name?')
+	add_checkbox('#reference',label='long name',default_value=True,tip='reference original name in the clip\'s name?')
 	add_same_line()
-	add_input_text('name',width=500)
+	add_input_text('name',width=400)
+
 	add_separator()
 
 	def assert_times(sender,data):
@@ -96,10 +96,17 @@ with window('MAIN'):
 				e = 1
 			s = e - 1
 
-		set_value('start', simplify(s))
-		set_value('end', simplify(e))
+		in_s = simplify(s)
+		in_e = simplify(e)
+
+		set_value('start', in_s)
+		set_value('end', in_e)
 		set_value('##arrow_start', s)
 		set_value('##arrows_end', e)
+
+		name = get_value('name')
+		if not name or '__to__' in name:
+			set_value('name', '{}-{}-{}__to__{}-{}-{}'.format(*(in_s+in_e)))
 
 	add_input_int('##arrow_start',width=10,min_value=0,default_value=0,callback=assert_times)
 	add_same_line(xoffset=0)
@@ -136,7 +143,7 @@ with window('MAIN'):
 
 	add_button('clear', callback=zero_times)
 	add_same_line(xoffset=430)
-	add_listbox('format',items=['.mp4','.webm','.gif'],width=80)
+	add_listbox('format',items=['','.mp4','.gif','.webm'],width=80)
 	add_separator()
 
 	def split(*args):
@@ -161,16 +168,11 @@ with window('MAIN'):
 			print('no path selected')
 		else:
 			file = get_value('opened_file')
-			print()
-			print(path)
-			print(file)
-			print()
-			ext = (lambda a: '.'+a[len(a)-1] )(file.split('.'))
+			ext = ['','.mp4','.gif','.webm'][get_value('format')]
+			ext = (lambda a: '.'+a[len(a)-1] )(file.split('.')) if not ext else ext
 			in_file = os.path.join(path,file)
 
-			if get_value('overwrite'):
-				output_file = in_file
-			elif get_value('#reference'):
+			if get_value('#reference'):
 				output_file = os.path.join(path, file[:len(file)-len(ext)]+f'__{in_n}__'+ext)
 			else:
 				output_file = os.path.join(path, f'{in_n}'+ext)
@@ -187,10 +189,8 @@ with window('MAIN'):
 
 	add_same_line(xoffset=440)
 	add_button('split',callback=split)
-	add_same_line(xoffset=150)
-	add_checkbox('open explorer',tip='show the finished file in explorer',default_value=True)
 	add_same_line(xoffset=300)
-	add_checkbox('overwrite',tip='replace the original file',default_value=False)
+	add_checkbox('open explorer',tip='show the finished file in explorer',default_value=True)
 
 	def youtube_dl(s,url):
 		w,h = get_main_window_size()
@@ -212,17 +212,18 @@ with window('MAIN'):
 		delete_item('youtube-dl')
 
 	add_separator()
-	add_dummy(height=300)
+	add_input_text('##notepad',multiline=True,tab_input=True,width=490,height=222)
+
 	add_separator()
 	add_text('Youtube Downloader')
-	add_button('##youtube-dl',label='load',callback=youtube_dl,callback_data=lambda *args: get_value('url'))
+	add_button('##youtube-dl',label='load url',callback=youtube_dl,callback_data=lambda *args: get_value('url'))
 	add_same_line()
-	add_input_text('url',width=440)
+	add_input_text('url',width=450)
 
 # ==============================================================================
 add_additional_font('anonBlack.ttf', size=14)
 set_primary_window(window='MAIN', value=True)
-set_main_window_size(518,644)
+set_main_window_size(518,580)
 set_main_window_resizable(False)
 set_main_window_title('Video Clipper')
 start_dearpygui()
